@@ -1,13 +1,36 @@
 
-const User = require("../model/user")
+const User = require("../model/user");
+const router = require("../route/user");
+const { body, validationResult } = require('express-validator');
 
-const signup = (req, res) => {
+const signup = async (req, res, next) => {
+
+    // let user = await User.create({
+    //     name: "1111",
+    //     email: "tesfsdfasdfsSDFdsdfting@testing.com",
+    //     afsd: "afsdf"
+    // })
+
+
     User.create({
-        name:"asdf",
-        email:"tesfasdfting@testing.com",
-        afsd:"afsdf"
+        name: "1111",
+        email: "tesfsdfasdfsSDFdsdfting@testing.com",
+        afsd: "afsdf"
+    }, (err, data) => {
+        if (err) return next(err)
     })
-    res.send("/signup")
+
+    // let user  =  new User()
+    // user.name = "123",
+    // user.email = "t@t.com"
+    // user.save();
+
+    // console.log(user);
+
+
+
+
+    // res.send("/signup")
 }
 
 
