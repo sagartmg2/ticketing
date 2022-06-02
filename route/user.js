@@ -1,6 +1,7 @@
 const express = require('express')
 
 const router = express.Router();
+const User = require("../model/user")
 
 const user_controller = require("../controller/user")
 
@@ -8,22 +9,45 @@ const authentication = require("../middleware/authentication")
 
 const { body, validationResult } = require('express-validator');
 
+const validate = validations => {
+    return async (req, res, next) => {
+        await Promise.all(validations.map(validation => validation.run(req)));
 
-// router.post("/signup",user_controller.signup)
-router.post("/signup", body('username').isEmail(),
-    // password must be at least 5 chars long
-    body('password').isLength({ min: 5 }),
-    (req, res) => {
-        // Finds the validation errors in this request and wraps them in an object with handy functions
         const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+        if (errors.isEmpty()) {
+            return next();
         }
 
-        User.create({
-            username: req.body.username,
-            password: req.body.password,
-        }).then(user => res.json(user));
+        res.status(400).json({ errors: errors.array() });
+    };
+};
+
+const checkValidation = validate([
+    body('email').isEmail().custom(value => {
+        return User.findOne({ email: value }).then(user => {
+            if (user) {
+                return Promise.reject('E-mail already in use');
+            }
+        });
+    }),
+    // password must be at least 5 chars long
+    body('password').isLength({ min: 5 }),
+    body('role_id').custom(value => {
+        if (value) {
+            return User.findById(value).then(role => {
+                if (role) {
+                    return Promise.reject('E-mail already in use');
+                }
+            });
+        } else {
+            return Promise.reject('Role is required');
+
+        }
     })
+])
+
+// router.post("/signup",user_controller.signup)
+router.post("/signup", checkValidation, user_controller.signup)
+// router.post("/login", checkValidation, user_controller.login)
 
 module.exports = router
