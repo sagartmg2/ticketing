@@ -17,6 +17,9 @@ const UserSchema = new Schema({
         type:[ObjectId],
         ref:"Department"
     },
+    refresh_tokens:{
+        type:[]
+    },
     password:String
 });
 

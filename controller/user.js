@@ -3,6 +3,7 @@ const User = require("../model/user");
 const router = require("../route/user");
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
 
 const signup = async (req, res, next) => {
 
@@ -27,27 +28,43 @@ const signup = async (req, res, next) => {
     if (user) {
         res.send(user)
     }
-
-    // let user  =  new User()
-    // user.name = "123",
-    // user.email = "t@t.com"
-    // user.save();
-
-    // console.log(user);
-
-
-
-
-    // res.send("/signup")
 }
 
 
-const login = (req, res) => {
-    res.send("/signup")
+const getAccessToken =  (req,res) => {
+    // req.refresh_token
+    // if exits then only generate new access token
+}
+
+
+const login = async (req, res) => {
+
+    const { email, password } = req.body;
+
+    // Load hash from your password DB.
+
+    let user = await User.findOne({ email })
+
+    let status = await bcrypt.compare(password, user.password);
+
+    console.log(user);
+    var access_token = jwt.sign(user.toObject(), process.env.SECRET);
+
+    var refresh_token = jwt.sign(user.toObject(), process.env.REFRESH_TOKEN_SECRET);
+
+    // save refresh_tokens in Database
+
+    res.send({
+        data:"success",
+        access_token,
+        refresh_token,
+    })
+    
 }
 
 module.exports = {
     login,
-    signup
+    signup,
+    getAccessToken,
 }
 

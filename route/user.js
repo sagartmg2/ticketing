@@ -48,6 +48,7 @@ const checkValidation = validate([
 
 // router.post("/signup",user_controller.signup)
 router.post("/signup", checkValidation, user_controller.signup)
-// router.post("/login", checkValidation, user_controller.login)
+router.post("/login", user_controller.login)
+router.post("/get-token", user_controller.getAccessToken)
 
 module.exports = router

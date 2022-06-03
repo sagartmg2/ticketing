@@ -2,22 +2,16 @@ const express = require('express')
 const mongoose = require('mongoose');
 require('dotenv').config()
 const user_route = require("./route/user")
+const ticket_route = require("./route/ticket");
+const authentication = require('./middleware/authentication');
 
 const app = express()
 
 // global middleware
 app.use(express.json());
 
-// app.get("/users/test",(req,res) => {
-//     res.send("test")
-// })  
-
-// app.get("/users/test",(req,res) => {
-//     res.send("test")
-// }) 
-
-
 app.use("/api/users", user_route)
+app.use("/api/tickets",authentication,ticket_route)
 
 var mongoDB = 'mongodb://localhost:27017/ticketing';
 mongoose.connect(mongoDB, { useNewUrlParser: true });
