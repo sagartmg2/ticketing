@@ -1,23 +1,30 @@
+const jwt=  require("jsonwebtoken")
+const Role = require("../model/role")
 
+module.exports = async (req,res,next) => {
 
-module.exports = (req,res,next) => {
+    if (!req.headers.authorization || !req.headers.authorization.startsWith("Bearer")) {
+        res.status(401).send({
+            data: "Invalid Authorization Header"
+        })
+    }
+    
+    const token = req.headers.authorization.split(" ")[1];
 
-    console.log(req.headers.authorization);
+    let decoded = jwt.verify(token, process.env.SECRET)
 
-    // token 
+    if (decoded) {
+        req.user = decoded
 
-    // jwt.verify token 
-
-    // if right token  next()
-    // else{
-        // res.send(401)
-    // }
-
-    return;
-    req.headers
-    //jwt.very()
-    req.body.user = {id:1}
-    next()
+        let role =  await Role.findById(req.user.role_id)
+        req.role = role.toObject().name
+        next()
+    } else {
+        res.status(401).send({
+            data: "unauthenticated"
+        })
+    }
+    
 }
 
 

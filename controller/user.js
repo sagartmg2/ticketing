@@ -47,10 +47,15 @@ const login = async (req, res) => {
 
     let status = await bcrypt.compare(password, user.password);
 
-    console.log(user);
-    var access_token = jwt.sign(user.toObject(), process.env.SECRET);
+    // console.log(user);
+    let user_obj = user.toObject();
+    delete user_obj.password;
 
-    var refresh_token = jwt.sign(user.toObject(), process.env.REFRESH_TOKEN_SECRET);
+
+
+    var access_token = jwt.sign(user_obj, process.env.SECRET);
+
+    var refresh_token = jwt.sign(user_obj, process.env.REFRESH_TOKEN_SECRET);
 
     // save refresh_tokens in Database
 
