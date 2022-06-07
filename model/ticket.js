@@ -13,7 +13,7 @@ const TicketSchema = new Schema({
     },
     created_by: {
         type: ObjectId,
-        ref: user,
+        ref: "User",
     },
     status: {
         enum: ["pending", "in_process", "completed"],

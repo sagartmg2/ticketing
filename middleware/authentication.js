@@ -15,7 +15,6 @@ module.exports = async (req,res,next) => {
 
     if (decoded) {
         req.user = decoded
-
         let role =  await Role.findById(req.user.role_id)
         req.role = role.toObject().name
         next()

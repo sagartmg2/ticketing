@@ -15,20 +15,51 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
         cb(null, file.fieldname + '-' + uniqueSuffix)
-        // use path module
+        // TODO:use path module
 
-        // add global middleware in server.js
-        // http://localhost:8000/image.png
+        // TODO:add global middleware in server.js
+        // http://localhost:8000/photos-1654426871435-714155380.png
     }
 })
 
 const upload = multer({ storage: storage })
 
-router.get("", ticket_controller.index)
-router.post("", upload.array('photos', 12), ticket_controller.store)
-router.put("", ticket_controller.update)
-router.delete("", ticket_controller.remove)
+const checkRole = (req, res, next) => {
+    if (req.role === "customer") {
+        req.body.department_ids = []
+        req.body.priority = "low"
+        req.body.status = "pending"
+    }
+    next();
+}
 
+/* 
+    // executation task 
+    @parms 
+    @return void
+*/
+
+const forbidAlteration = (req, res, next) => {
+    if (req.role === "customer") {
+        res.status(403).send({
+            data: "Forbidden"
+        })
+    } else if (req.role === "developer") {
+        /* block if tries to delete others ticket */
+
+        // TODO:block if tries to delete others ticket
+
+        next()
+    }
+
+}
+
+
+
+router.get("", ticket_controller.index)
+router.post("", upload.array('photos', 12), checkRole, ticket_controller.store)
+router.put("/:id", checkRole, forbidAlteration, ticket_controller.update)
+router.delete("/:id", forbidAlteration, ticket_controller.remove)
 
 module.exports = router
 
