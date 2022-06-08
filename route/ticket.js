@@ -1,11 +1,13 @@
 const express = require('express')
+const path = require("path")
 
 const router = express.Router();
 
 const ticket_controller = require("../controller/ticket")
 
 
-const multer = require('multer')
+const multer = require('multer');
+const Ticket = require('../model/ticket');
 // const upload = multer({ dest: 'uploads/' })
 
 const storage = multer.diskStorage({
@@ -14,11 +16,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, file.fieldname + '-' + uniqueSuffix)
-        // TODO:use path module
-
-        // TODO:add global middleware in server.js
-        // http://localhost:8000/photos-1654426871435-714155380.png
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
     }
 })
 
@@ -39,17 +37,59 @@ const checkRole = (req, res, next) => {
     @return void
 */
 
-const forbidAlteration = (req, res, next) => {
+const forbidAlteration = async (req, res, next) => {
     if (req.role === "customer") {
-        res.status(403).send({
+        return res.status(403).send({
             data: "Forbidden"
         })
     } else if (req.role === "developer") {
         /* block if tries to delete others ticket */
 
-        // TODO:block if tries to delete others ticket
+        let ticket = await Ticket.findById(req.params.id)
 
+        if (ticket.created_by != req.user._id && req.method == "DELETE") {
+            return res.status(403).send({
+                data: "Forbidden"
+            })
+        } else {
+
+            // should be able to acess if tickets.department_ids has its deparment
+
+            let user_dept_ids = req.user.department_ids;
+            // let ticket_dept_ids = ticket.department_ids.map(String);
+            let ticket_dept_ids = ticket.department_ids.map(el => el.toString());
+
+
+            console.log(ticket_dept_ids); // [ '6298972e01e42754cd2956d1', '6298972e01e42754cd2956d0' ]
+            console.log(user_dept_ids); // [ '6298972e01e42754cd2956d1' ]
+
+            let status = ticket_dept_ids.some(el => {
+                return user_dept_ids.includes(el)
+            })
+
+
+            // TODO: try to find if users department exists in tickets department 
+            //  send user_dept_ids in $in 
+            // Ticket.aggregate([
+            //     {
+            //         $match: {
+
+            //         }
+            //         // $in
+            //     }
+            // ])
+
+            console.log(status);
+            if (!status) {
+                return res.status(403).send({
+                    data: {},
+                    msg: "Forbidden"
+                })
+            }
+        }
         next()
+    } else {
+        next();
     }
 
 }

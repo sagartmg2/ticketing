@@ -1,5 +1,6 @@
 const ticket = require("../model/ticket")
 const Ticket = require("../model/ticket")
+const fs = require("fs")
 
 
 const index = (req, res, next) => {
@@ -7,6 +8,8 @@ const index = (req, res, next) => {
 }
 
 const store = async (req, res, next) => {
+
+
 
     let { title, description, department_ids, status, priority, images } = req.body
 
@@ -34,14 +37,22 @@ const update = (req, res, next) => {
 
 const remove = (req, res, next) => {
 
-    console.log(req.body);
-    Ticket.findByIdAndDelete(req.params.id,(err,data) => {
+    Ticket.findByIdAndDelete(req.params.id, (err, data) => {
 
-        if(err)return next(err)
+        if (err) return next(err)
 
-        // TODO: delete images from system
+        data.images.forEach(el => {
+            fs.unlink(`uploads/${el}`,(err,data) => {
+
+            })
+
+        })
+
+
+
+
         return res.send({
-            data:"removed"
+            data: "removed"
         })
 
 

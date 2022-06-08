@@ -9,6 +9,7 @@ const app = express()
 
 // global middleware
 app.use(express.json());
+app.use(express.static('uploads'))
 
 app.use("/api/users", user_route)
 app.use("/api/tickets",authentication,ticket_route)
