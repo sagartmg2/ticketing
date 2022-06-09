@@ -4,6 +4,11 @@ const path = require("path")
 const router = express.Router();
 
 const ticket_controller = require("../controller/ticket")
+const mongoose = require('mongoose');
+
+
+const Schema = mongoose.Schema;
+const ObjectId = Schema.ObjectId;
 
 
 const multer = require('multer');
@@ -63,10 +68,19 @@ const forbidAlteration = async (req, res, next) => {
             console.log(ticket_dept_ids); // [ '6298972e01e42754cd2956d1', '6298972e01e42754cd2956d0' ]
             console.log(user_dept_ids); // [ '6298972e01e42754cd2956d1' ]
 
-            let status = ticket_dept_ids.some(el => {
-                return user_dept_ids.includes(el)
-            })
+            // let status = ticket_dept_ids.some(el => {
+            //     return user_dept_ids.includes(el)
+            // })
 
+            // user_dept_ids= [ ObjectId('6298972e01e42754cd2956d1') ]
+            // db.tickets.find({_id:ObjectId("")department_ids:{$in:user_dept_ids}}).count();
+
+            let response = await Ticket.findOne({ _id: mongoose.Types.ObjectId(req.params.id), department_ids: { $in: [mongoose.Types.ObjectId('6298972e01e42754cd2956d1')] } })
+
+            // console.log({ response });
+
+
+            // return
 
             // TODO: try to find if users department exists in tickets department 
             //  send user_dept_ids in $in 
@@ -79,8 +93,9 @@ const forbidAlteration = async (req, res, next) => {
             //     }
             // ])
 
-            console.log(status);
-            if (!status) {
+            // console.log(status);
+            if (!response) {
+                // if (!status) {
                 return res.status(403).send({
                     data: {},
                     msg: "Forbidden"
@@ -98,7 +113,7 @@ const forbidAlteration = async (req, res, next) => {
 
 router.get("", ticket_controller.index)
 router.post("", upload.array('photos', 12), checkRole, ticket_controller.store)
-router.put("/:id", checkRole, forbidAlteration, ticket_controller.update)
+router.put("/:id", upload.array('photos', 12),checkRole, forbidAlteration, ticket_controller.update)
 router.delete("/:id", forbidAlteration, ticket_controller.remove)
 
 module.exports = router

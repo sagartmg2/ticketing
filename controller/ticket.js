@@ -1,10 +1,60 @@
 const ticket = require("../model/ticket")
 const Ticket = require("../model/ticket")
-const fs = require("fs")
+const fs = require("fs");
+
+const mongoose = require("mongoose");
 
 
-const index = (req, res, next) => {
-    res.send("index")
+const index = async (req, res, next) => {
+    let tickets;
+    // console.log(req.role);
+    // console.log(req.user._id); // in the string form 
+    if (req.role == "customer") {
+        tickets = await Ticket.find({ created_by: mongoose.Types.ObjectId(req.user._id) });
+    } else if (req.role == "developer") {
+        
+        // created_by himself 
+        // or 
+        // assigned to  department where he is assigned 
+        // console.log("user",req.user);
+        let user_department_ids = req.user.department_ids
+        console.log({user_department_ids});
+        // return ;
+
+        tickets = await Ticket.find({ $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }] })
+
+
+        // TODO:
+        // Ticket.aggregate([
+        //     {
+        //         // $match:{ $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }
+
+        //     },
+        //     {
+        //         $lookup:{
+
+        //         }
+        //     }
+            
+        // ])
+
+
+
+
+
+
+
+
+
+    } else {
+        tickets = await Ticket.find({});
+    }
+
+
+
+
+
+    res.send(tickets)
 }
 
 const store = async (req, res, next) => {
@@ -31,8 +81,22 @@ const store = async (req, res, next) => {
 
 
 
-const update = (req, res, next) => {
-    res.send("update")
+const update = async (req, res, next) => {
+    let { title, description, department_ids, status, priority, images } = req.body
+
+    images = req.files.map(el => {
+        return el.filename;
+    })
+
+    let updated_by = req.user._id;
+
+    let ticket = await Ticket.findByIdAndUpdate(req.params.id, {
+        title, description, department_ids, status, priority, images, updated_by
+    }, { new: true })
+
+    if (ticket) {
+        res.send(ticket)
+    }
 }
 
 const remove = (req, res, next) => {
@@ -42,7 +106,7 @@ const remove = (req, res, next) => {
         if (err) return next(err)
 
         data.images.forEach(el => {
-            fs.unlink(`uploads/${el}`,(err,data) => {
+            fs.unlink(`uploads/${el}`, (err, data) => {
 
             })
 
