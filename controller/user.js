@@ -51,8 +51,6 @@ const login = async (req, res) => {
     let user_obj = user.toObject();
     delete user_obj.password;
 
-
-
     var access_token = jwt.sign(user_obj, process.env.SECRET);
 
     var refresh_token = jwt.sign(user_obj, process.env.REFRESH_TOKEN_SECRET);

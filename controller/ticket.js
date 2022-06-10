@@ -1,4 +1,3 @@
-const ticket = require("../model/ticket")
 const Ticket = require("../model/ticket")
 const fs = require("fs");
 
@@ -6,45 +5,87 @@ const mongoose = require("mongoose");
 
 
 const index = async (req, res, next) => {
+
+
+    console.log(req.params);
+    console.log(req.query);
+
+    let search_term = "";
+    if (req.query.search_term) {
+        search_term = req.query.search_term
+    }
+
+    let per_page = 25;
+
+    if (req.query.per_page) {
+        per_page = req.query.per_page
+    }
+
+
+
     let tickets;
     // console.log(req.role);
-    // console.log(req.user._id); // in the string form 
+    // console.log("user_id", req.user._id); // in the string form 
     if (req.role == "customer") {
         tickets = await Ticket.find({ created_by: mongoose.Types.ObjectId(req.user._id) });
     } else if (req.role == "developer") {
-        
+
+        console.log("inside ");
         // created_by himself 
         // or 
         // assigned to  department where he is assigned 
         // console.log("user",req.user);
         let user_department_ids = req.user.department_ids
-        console.log({user_department_ids});
+        user_department_ids = user_department_ids.map(el => {
+            return mongoose.Types.ObjectId(el)
+        })
+        console.log({ user_department_ids });
         // return ;
 
-        tickets = await Ticket.find({ $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }] })
-
+        // tickets = await Ticket.find({ $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }] })
 
         // TODO:
-        // Ticket.aggregate([
-        //     {
-        //         // $match:{ $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }
+        tickets = await Ticket.aggregate([
+            {
+                $match: {
+                    $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }]
+                }
+            },
+            {
+                $lookup: {
+                    as: "user",
+                    from: "users",
+                    localField: "created_by",
+                    foreignField: "_id"
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $project: {
+                    "user.password": 0
+                }
+            }
+            ,
+            {
+                $match: {
+                    $or: [
+                        {
+                            "title": { $regex: RegExp(search_term, "i") },
+                        },
+                        {
+                            "user.name": { $regex: RegExp(search_term, "i") },
+                        }
+                    ]
+                }
+                // "user.name": { $regex: RegExp(search_term, "i") }
+            },
+            {
+                $limit: parseInt(per_page)
 
-        //     },
-        //     {
-        //         $lookup:{
-
-        //         }
-        //     }
-            
-        // ])
-
-
-
-
-
-
-
-
+            }
+        ])
 
     } else {
         tickets = await Ticket.find({});

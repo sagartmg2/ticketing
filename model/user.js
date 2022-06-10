@@ -20,7 +20,12 @@ const UserSchema = new Schema({
     refresh_tokens:{
         type:[]
     },
-    password:String
+    password:String,
+
+    // password:{
+    //     type:String,
+    //     select:false      TODO: this will not return password feild on find()  . . search for a way to return password  
+    // }
 });
 
 module.exports = mongoose.model('User', UserSchema);

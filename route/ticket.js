@@ -77,22 +77,6 @@ const forbidAlteration = async (req, res, next) => {
 
             let response = await Ticket.findOne({ _id: mongoose.Types.ObjectId(req.params.id), department_ids: { $in: [mongoose.Types.ObjectId('6298972e01e42754cd2956d1')] } })
 
-            // console.log({ response });
-
-
-            // return
-
-            // TODO: try to find if users department exists in tickets department 
-            //  send user_dept_ids in $in 
-            // Ticket.aggregate([
-            //     {
-            //         $match: {
-
-            //         }
-            //         // $in
-            //     }
-            // ])
-
             // console.log(status);
             if (!response) {
                 // if (!status) {
@@ -113,7 +97,7 @@ const forbidAlteration = async (req, res, next) => {
 
 router.get("", ticket_controller.index)
 router.post("", upload.array('photos', 12), checkRole, ticket_controller.store)
-router.put("/:id", upload.array('photos', 12),checkRole, forbidAlteration, ticket_controller.update)
+router.put("/:id", upload.array('photos', 12), checkRole, forbidAlteration, ticket_controller.update)
 router.delete("/:id", forbidAlteration, ticket_controller.remove)
 
 module.exports = router

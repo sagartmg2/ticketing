@@ -28,7 +28,6 @@ const TicketSchema = new Schema({
     images: {
         type: [String],
     }
-    // https://www.npmjs.com/package/multer
 });
 
 module.exports = mongoose.model('Ticket', TicketSchema);
