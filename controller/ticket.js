@@ -5,8 +5,6 @@ const mongoose = require("mongoose");
 
 
 const index = async (req, res, next) => {
-
-
     console.log(req.params);
     console.log(req.query);
 
@@ -131,9 +129,19 @@ const update = async (req, res, next) => {
 
     let updated_by = req.user._id;
 
-    let ticket = await Ticket.findByIdAndUpdate(req.params.id, {
-        title, description, department_ids, status, priority, images, updated_by
-    }, { new: true })
+    try {
+        let ticket = await Ticket.findByIdAndUpdate(req.params.id, {
+            title, description, department_ids, status, priority, images, updated_by
+        }, { new: true })
+    }
+    catch (err) {
+        next(err)
+    }
+
+
+
+    // TODO: send mail after cange in ticket status
+
 
     if (ticket) {
         res.send(ticket)

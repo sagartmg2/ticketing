@@ -90,10 +90,7 @@ const forbidAlteration = async (req, res, next) => {
     } else {
         next();
     }
-
 }
-
-
 
 router.get("", ticket_controller.index)
 router.post("", upload.array('photos', 12), checkRole, ticket_controller.store)
