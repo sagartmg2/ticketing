@@ -4,12 +4,14 @@ require('dotenv').config()
 const user_route = require("./route/user")
 const ticket_route = require("./route/ticket");
 const authentication = require('./middleware/authentication');
+const cors = require("cors")
 
 const app = express()
 
 // global middleware
 app.use(express.json());
 app.use(express.static('uploads'))
+app.use(cors())
 
 app.use("/api/users", user_route)
 app.use("/api/tickets",authentication,ticket_route)
