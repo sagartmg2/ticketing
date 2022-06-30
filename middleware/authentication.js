@@ -4,7 +4,7 @@ const Role = require("../model/role")
 module.exports = async (req,res,next) => {
 
     if (!req.headers.authorization || !req.headers.authorization.startsWith("Bearer")) {
-        res.status(401).send({
+        return res.status(401).send({
             data: "Invalid Authorization Header"
         })
     }

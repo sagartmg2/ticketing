@@ -15,6 +15,7 @@ app.use(cors())
 
 app.use("/api/users", user_route)
 app.use("/api/tickets",authentication,ticket_route)
+// app.use("/api/roles",authentication,role_route)
 
 var mongoDB = 'mongodb://localhost:27017/ticketing';
 mongoose.connect(mongoDB, { useNewUrlParser: true });

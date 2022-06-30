@@ -19,9 +19,14 @@ const index = async (req, res, next) => {
         per_page = req.query.per_page
     }
 
+    let page = 0;
+    if (req.query.page) {
+        page = req.query.page
+    }
 
 
     let tickets;
+    let total_counts;
     // console.log(req.role);
     // console.log("user_id", req.user._id); // in the string form 
     if (req.role == "customer") {
@@ -43,6 +48,45 @@ const index = async (req, res, next) => {
         // tickets = await Ticket.find({ $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }] })
 
         // TODO:
+
+        total_counts  = await Ticket.aggregate([
+            {
+                $match: {
+                    $or: [{ created_by: mongoose.Types.ObjectId(req.user._id) }, { department_ids: { $in: user_department_ids } }]
+                }
+            },
+            {
+                $lookup: {
+                    as: "user",
+                    from: "users",
+                    localField: "created_by",
+                    foreignField: "_id"
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $project: {
+                    "user.password": 0,
+                }
+            }
+            ,
+            {
+                $match: {
+                    $or: [
+                        {
+                            "title": { $regex: RegExp(search_term, "i") },
+                        },
+                        {
+                            "user.name": { $regex: RegExp(search_term, "i") },
+                        }
+                    ]
+                }
+                // "user.name": { $regex: RegExp(search_term, "i") }
+            },
+        ])
+
         tickets = await Ticket.aggregate([
             {
                 $match: {
@@ -62,7 +106,7 @@ const index = async (req, res, next) => {
             },
             {
                 $project: {
-                    "user.password": 0
+                    "user.password": 0,
                 }
             }
             ,
@@ -80,20 +124,36 @@ const index = async (req, res, next) => {
                 // "user.name": { $regex: RegExp(search_term, "i") }
             },
             {
-                $limit: parseInt(per_page)
+                $facet:{
+                    "total_counts":[
+                        {$count:"total_counts"}
+                    ],
+                    "data":[
+                        {
+                            $skip: ((page - 1) * per_page),
+                        },
+                        {
+                            $limit: parseInt(per_page)
+                        }
+                    ]
 
-            }
+                }
+            },
         ])
 
     } else {
         tickets = await Ticket.find({});
     }
 
+    // return res.send(tickets)
+    let data  = tickets[0].data;
 
 
-
-
-    res.send(tickets)
+    total_counts = tickets[0].total_counts[0].total_counts
+    res.send({
+        tickets:data,
+        total_counts,
+    })
 }
 
 const store = async (req, res, next) => {
@@ -102,9 +162,16 @@ const store = async (req, res, next) => {
 
     let { title, description, department_ids, status, priority, images } = req.body
 
-    images = req.files.map(el => {
-        return el.filename;
-    })
+    if (req.files) {
+        images = req.files.map(el => {
+            return el.filename;
+        })
+
+    } else {
+        images = []
+    }
+
+
 
     let created_by = req.user._id;
 
